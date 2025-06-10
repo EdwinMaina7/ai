@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoWise - AI Crypto Advisor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .chat-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        .crypto-stats {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.bot {
+            text-align: left;
+        }
+
+        .message-bubble {
+            display: inline-block;
+            max-width: 80%;
+            padding: 70px 60px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(235deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.bot .message-bubble {
+            background: white;
+            color: #333;
+            border: 1px solid #e2e8f0;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .quick-btn {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quick-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .price-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin: 10px 0;
+        }
+
+        .price-card h3 {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .price-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .sustainability-bar {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .sustainability-fill {
+            background: #4ade80;
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .disclaimer {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 0.85rem;
+            color: #92400e;
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                height: 90vh;
+                margin: 10px;
+            }
+            
+            .chat-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .crypto-stats {
+                flex-direction: column;
+                gap: 5px;
+                text-align: center;
+            }
+            
+            .message-bubble {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🚀 CryptoWise</h1>
+            <p>Your AI-Powered Crypto Investment Advisor</p>
+            <div class="crypto-stats">
+                <div>📊 Live Prices</div>
+                <div>🌱 Sustainability Scores</div>
+                <div>💡 Smart Advice</div>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-bubble">
+                    🤖 Hey there! I'm CryptoWise, your crypto investment advisor! 🚀
+                    <br><br>
+                    I can help you with:
+                    <br>💰 Real-time crypto prices
+                    <br>🌱 Sustainability analysis  
+                    <br>📊 Market insights
+                    <br>💡 Investment guidance
+                    <br><br>
+                    Try asking about Bitcoin prices or the most sustainable crypto!
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div>🔄 Analyzing crypto data...</div>
+        </div>
+
+        <div class="chat-input-container">
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="sendQuickMessage('price of bitcoin')">Bitcoin Price</button>
+                <button class="quick-btn" onclick="sendQuickMessage('market overview')">Market Overview</button>
+                <button class="quick-btn" onclick="sendQuickMessage('most sustainable crypto')">Sustainable Crypto</button>
+                <button class="quick-btn" onclick="sendQuickMessage('investment tips')">Investment Tips</button>
+            </div>
+            <div class="chat-input-wrapper">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Ask about crypto prices, sustainability, or investment advice..." onkeypress="handleKeyPress(event)">
+                <button class="send-button" onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Crypto database with sample data
+        const cryptoDatabase = {
+            "bitcoin": {
+                "symbol": "BTC",
+                "name": "Bitcoin",
+                "price": 67500,
+                "change24h": 2.5,
+                "sustainability_score": 3,
+                "energy_use": "high"
+            },
+            "ethereum": {
+                "symbol": "ETH", 
+                "name": "Ethereum",
+                "price": 3200,
+                "change24h": -1.2,
+                "sustainability_score": 6,
+                "energy_use": "medium"
+            },
+            "cardano": {
+                "symbol": "ADA",
+                "name": "Cardano", 
+                "price": 0.45,
+                "change24h": 5.8,
+                "sustainability_score": 8,
+                "energy_use": "low"
+            },
+            "solana": {
+                "symbol": "SOL",
+                "name": "Solana",
+                "price": 140,
+                "change24h": 3.2,
+                "sustainability_score": 7,
+                "energy_use": "low"
+            },
+            "polygon": {
+                "symbol": "MATIC",
+                "name": "Polygon",
+                "price": 0.85,
+                "change24h": 1.8,
+                "sustainability_score": 9,
+                "energy_use": "low"
+            }
+        };
+
+        function addMessage(content, isUser = false) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'message-bubble';
+            bubbleDiv.innerHTML = content;
+            
+            messageDiv.appendChild(bubbleDiv);
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function showLoading() {
+            document.getElementById('loading').classList.add('show');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('show');
+        }
+
+        function createPriceCard(crypto) {
+            const data = cryptoDatabase[crypto];
+            const changeIcon = data.change24h > 0 ? '📈' : '📉';
+            const changeColor = data.change24h > 0 ? '#4ade80' : '#ef4444';
+            
+            return `
+                <div class="price-card">
+                    <h3>${data.name} (${data.symbol})</h3>
+                    <div class="price-info">
+                        <span>💵 $${data.price.toLocaleString()}</span>
+                        <span style="color: ${changeColor}">${changeIcon} ${data.change24h > 0 ? '+' : ''}${data.change24h}%</span>
+                    </div>
+                    <div class="price-info">
+                        <span>⚡ Energy: ${data.energy_use}</span>
+                        <span>🌱 Sustainability: ${data.sustainability_score}/10</span>
+                    </div>
+                    <div class="sustainability-bar">
+                        <div class="sustainability-fill" style="width: ${data.sustainability_score * 10}%"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function processQuery(query) {
+            query = query.toLowerCase();
+            
+            // Price queries
+            for (const [crypto, data] of Object.entries(cryptoDatabase)) {
+                if (query.includes(crypto) || query.includes(data.symbol.toLowerCase())) {
+                    if (query.includes('price')) {
+                        return createPriceCard(crypto) + 
+                               `<div class="disclaimer">⚠️ Prices are simulated for demo purposes. Always verify with real market data!</div>`;
+                    }
+                }
+            }
+            
+            // Market overview
+            if (query.includes('market overview') || query.includes('show all')) {
+                let overview = '<h3>📊 Crypto Market Overview</h3>';
+                for (const crypto of Object.keys(cryptoDatabase)) {
+                    overview += createPriceCard(crypto);
+                }
+                overview += `<div class="disclaimer">⚠️ Demo data - not for actual trading decisions!</div>`;
+                return overview;
+            }
+            
+            // Sustainability
+            if (query.includes('sustainable') || query.includes('eco') || query.includes('green')) {
+                const mostSustainable = Object.keys(cryptoDatabase).reduce((a, b) => 
+                    cryptoDatabase[a].sustainability_score > cryptoDatabase[b].sustainability_score ? a : b
+                );
+                const data = cryptoDatabase[mostSustainable];
+                
+                return `
+                    <h3>🌱 Most Sustainable Cryptocurrency</h3>
+                    ${createPriceCard(mostSustainable)}
+                    <p><strong>${data.name}</strong> leads with a sustainability score of ${data.sustainability_score}/10!</p>
+                    <p>✅ Low energy consumption<br>✅ Eco-friendly consensus mechanism<br>✅ Strong long-term viability</p>
+                    <div class="disclaimer">⚠️ This is educational content, not financial advice. Always research before investing!</div>
+                `;
+            }
+            
+            // Investment tips
+            if (query.includes('investment') || query.includes('tips') || query.includes('advice')) {
+                return `
+                    <h3>💡 Smart Crypto Investment Tips</h3>
+                    <p><strong>🔍 Research First:</strong> Never invest without understanding the project</p>
+                    <p><strong>📊 Diversify:</strong> Don't put all eggs in one basket</p>
+                    <p><strong>💎 Long-term Focus:</strong> Crypto markets are volatile short-term</p>
+                    <p><strong>🛡️ Risk Management:</strong> Only invest what you can afford to lose</p>
+                    <p><strong>🌱 Consider Sustainability:</strong> Look for eco-friendly projects</p>
+                    <div class="disclaimer">⚠️ This is educational content, not financial advice!</div>
+                `;
+            }
+            
+            // Help
+            if (query.includes('help')) {
+                return `
+                    <h3>🤖 How I Can Help You</h3>
+                    <p><strong>💰 Price Queries:</strong> "price of bitcoin", "ethereum price"</p>
+                    <p><strong>📊 Market Data:</strong> "market overview", "show all prices"</p>
+                    <p><strong>🌱 Sustainability:</strong> "most sustainable crypto", "eco-friendly options"</p>
+                    <p><strong>💡 Investment Advice:</strong> "investment tips", "crypto advice"</p>
+                    <p>Just ask naturally - I'll understand! 🚀</p>
+                `;
+            }
+            
+            // Default response
+            return `
+                <p>🤔 I'm not sure about that! Try asking me about:</p>
+                <p>• Crypto prices (e.g., "Bitcoin price")</p>
+                <p>• Market overview</p>
+                <p>• Sustainable cryptocurrencies</p>
+                <p>• Investment advice</p>
+                <p>Or click the quick action buttons below! 🚀</p>
+            `;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addMessage(message, true);
+            
+            // Clear input
+            input.value = '';
+            
+            // Show loading
+            showLoading();
+            
+            // Simulate processing delay
+            setTimeout(() => {
+                hideLoading();
+                const response = processQuery(message);
+                addMessage(response);
+            }, 1000 + Math.random() * 1000);
+        }
+
+        function sendQuickMessage(message) {
+            document.getElementById('chatInput').value = message;
+            sendMessage();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Add welcome animations
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatContainer = document.querySelector('.chat-container');
+            chatContainer.style.transform = 'translateY(50px)';
+            chatContainer.style.opacity = '0';
+            
+            setTimeout(() => {
+                chatContainer.style.transition = 'all 0.6s ease-out';
+                chatContainer.style.transform = 'translateY(0)';
+                chatContainer.style.opacity = '1';
+            }, 100);
+        });
+    </script>
+</body>
+</html>
